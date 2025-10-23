@@ -3,7 +3,6 @@
   <head>
     <meta charset="utf-8">
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, shrink-to-fit=yes">
     <title>Unity Web Player | AI_Odyssey_Frontend</title>
     <link rel="shortcut icon" href="TemplateData/favicon.ico">
     <link rel="stylesheet" href="TemplateData/style.css">
@@ -18,21 +17,17 @@
         </div>
       </div>
       <div id="unity-warning"> </div>
-      <div id="unity-footer" onclick="toggleFooter()">
+      <div id="unity-footer">
         <div id="unity-logo-title-footer"></div>
         <div id="unity-fullscreen-button"></div>
         <div id="unity-build-title">AI_Odyssey_Frontend</div>
       </div>
     </div>
+
     <script>
       var canvas = document.querySelector("#unity-canvas");
 
-      // Shows a temporary message banner/ribbon for a few seconds, or
-      // a permanent error message on top of the canvas if type=='error'.
-      // If type=='warning', a yellow highlight color is used.
-      // Modify or remove this function to customize the visually presented
-      // way that non-critical warnings and error messages are presented to the
-      // user.
+      // 顯示警告或錯誤訊息（保留原有功能）
       function unityShowBanner(msg, type) {
         var warningBanner = document.querySelector("#unity-warning");
         function updateBannerVisibility() {
@@ -52,155 +47,65 @@
         updateBannerVisibility();
       }
 
+      // ---- 以下為 Unity build 設定 ----
       var buildUrl = "Build";
       var loaderUrl = buildUrl + "/AI_Odyssey0.1.11.loader.js";
       var config = {
         arguments: [],
-        dataUrl: buildUrl + "/AI_Odyssey0.1.11.data.unityweb",
-        frameworkUrl: buildUrl + "/AI_Odyssey0.1.11.framework.js.unityweb",
-        codeUrl: buildUrl + "/AI_Odyssey0.1.11.wasm.unityweb",
+        dataUrl: buildUrl + "/AI_Odyssey0.1.11.data.br",
+        frameworkUrl: buildUrl + "/AI_Odyssey0.1.11.framework.js.br",
+        codeUrl: buildUrl + "/AI_Odyssey0.1.11.wasm.br",
         streamingAssetsUrl: "StreamingAssets",
         companyName: "DefaultCompany",
         productName: "AI_Odyssey_Frontend",
         productVersion: "1.0",
         showBanner: unityShowBanner,
-        // errorHandler: function(err, url, line) {
-        //    alert("error " + err + " occurred at line " + line);
-        //    // Return 'true' if you handled this error and don't want Unity
-        //    // to process it further, 'false' otherwise.
-        //    return true;
-        // },
       };
 
-      // By default, Unity keeps WebGL canvas render target size matched with
-      // the DOM size of the canvas element (scaled by window.devicePixelRatio)
-      // Set this to false if you want to decouple this synchronization from
-      // happening inside the engine, and you would instead like to size up
-      // the canvas DOM size and WebGL render target sizes yourself.
-      // config.matchWebGLToCanvasSize = false;
+      // ---- 螢幕尺寸與裝置判定 ----
+      if (/iPhone|iPad|iPod|Android/i.test(navigator.userAgent)) {
+        // 📱 手機／平板版設定
+        var meta = document.createElement('meta');
+        meta.name = 'viewport';
+        meta.content = 'width=device-width, height=device-height, initial-scale=1.0, user-scalable=no, shrink-to-fit=yes';
+        document.getElementsByTagName('head')[0].appendChild(meta);
 
-      // If you would like all file writes inside Unity Application.persistentDataPath
-      // directory to automatically persist so that the contents are remembered when
-      // the user revisits the site the next time, uncomment the following line:
-      // config.autoSyncPersistentDataPath = true;
-      // This autosyncing is currently not the default behavior to avoid regressing
-      // existing user projects that might rely on the earlier manual
-      // JS_FileSystem_Sync() behavior, but in future Unity version, this will be
-      // expected to change.
+        document.querySelector("#unity-container").className = "unity-mobile";
+        canvas.className = "unity-mobile";
 
-      // 響應式設計函數
-      function adjustCanvasSize() {
-        const container = document.querySelector("#unity-container");
-        const canvas = document.querySelector("#unity-canvas");
-        const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
-        
-        if (isMobile) {
-          // 行動裝置：填滿整個螢幕
-          container.className = "unity-mobile";
-          canvas.className = "unity-mobile";
-        } else {
-          // 桌面裝置：置中顯示，響應式調整
-          container.className = "unity-desktop";
-          canvas.className = "";
-          
-          const windowWidth = window.innerWidth;
-          const windowHeight = window.innerHeight;
-          const gameAspectRatio = 1920 / 1080;
-          const windowAspectRatio = windowWidth / windowHeight;
-          
-          let canvasWidth, canvasHeight;
-          
-          if (windowAspectRatio > gameAspectRatio) {
-            // 視窗較寬，以高度為基準
-            canvasHeight = Math.min(windowHeight * 0.8, 1080);
-            canvasWidth = canvasHeight * gameAspectRatio;
-          } else {
-            // 視窗較高，以寬度為基準
-            canvasWidth = Math.min(windowWidth * 0.8, 1920);
-            canvasHeight = canvasWidth / gameAspectRatio;
-          }
-          
-          // 確保canvas置中
-          canvas.style.width = canvasWidth + "px";
-          canvas.style.height = canvasHeight + "px";
-          canvas.style.margin = "0 auto";
-          canvas.style.display = "block";
-        }
-      }
-      
-      // 初始調整
-      adjustCanvasSize();
-      
-      // 監聽視窗大小變化
-      window.addEventListener('resize', adjustCanvasSize);
-
-      // 底部工具列切換功能
-      function toggleFooter() {
-        const footer = document.querySelector("#unity-footer");
-        if (footer.style.display === "none") {
-          footer.style.display = "flex";
-        } else {
-          footer.style.display = "none";
-        }
+        // 若想降低解析度可開啟這行（提升效能）
+        // config.devicePixelRatio = 1;
+      } else {
+        // 💻 桌面版固定為 1920x1080 並置中顯示
+        canvas.style.width = "1920px";
+        canvas.style.height = "1080px";
+        canvas.style.margin = "auto";
+        canvas.style.display = "block";
       }
 
-      // 點擊遊戲畫面時隱藏底部工具列
-      function hideFooterOnGameClick() {
-        const canvas = document.querySelector("#unity-canvas");
-        const footer = document.querySelector("#unity-footer");
-        
-        canvas.addEventListener('click', function() {
-          footer.style.display = "none";
-        });
-      }
-
-      // 鍵盤快捷鍵重新顯示底部工具列
-      function showFooterOnKeyPress() {
-        document.addEventListener('keydown', function(event) {
-          // 按 F1 或 Tab 鍵重新顯示底部工具列
-          if (event.key === 'F1' || event.key === 'Escape') {
-            event.preventDefault();
-            const footer = document.querySelector("#unity-footer");
-            footer.style.display = "flex";
-          }
-        });
-      }
-
-      // 雙擊遊戲畫面重新顯示底部工具列
-      function showFooterOnDoubleClick() {
-        const canvas = document.querySelector("#unity-canvas");
-        const footer = document.querySelector("#unity-footer");
-        
-        canvas.addEventListener('dblclick', function() {
-          footer.style.display = "flex";
-        });
-      }
-
-      // 初始化底部工具列功能
-      hideFooterOnGameClick();
-      showFooterOnKeyPress();
-      showFooterOnDoubleClick();
-
+      // 顯示載入條
       document.querySelector("#unity-loading-bar").style.display = "block";
 
+      // ---- 載入 Unity 執行程式 ----
       var script = document.createElement("script");
       script.src = loaderUrl;
       script.onload = () => {
         createUnityInstance(canvas, config, (progress) => {
           document.querySelector("#unity-progress-bar-full").style.width = 100 * progress + "%";
-              }).then((unityInstance) => {
-                document.querySelector("#unity-loading-bar").style.display = "none";
-                document.querySelector("#unity-fullscreen-button").onclick = () => {
-                  document.makeFullscreen('unity-container');
-                };
+        }).then((unityInstance) => {
+          document.querySelector("#unity-loading-bar").style.display = "none";
 
-              }).catch((message) => {
-                alert(message);
-              });
-            };
+          // ✅ 修正版全螢幕邏輯
+          document.querySelector("#unity-fullscreen-button").onclick = () => {
+            unityInstance.SetFullscreen(1);
+          };
+
+        }).catch((message) => {
+          alert(message);
+        });
+      };
 
       document.body.appendChild(script);
-
     </script>
   </body>
 </html>
