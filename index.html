@@ -3,6 +3,7 @@
   <head>
     <meta charset="utf-8">
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, shrink-to-fit=yes">
     <title>Unity Web Player | AI_Odyssey_Frontend</title>
     <link rel="shortcut icon" href="TemplateData/favicon.ico">
     <link rel="stylesheet" href="TemplateData/style.css">
@@ -17,7 +18,7 @@
         </div>
       </div>
       <div id="unity-warning"> </div>
-      <div id="unity-footer">
+      <div id="unity-footer" onclick="toggleFooter()">
         <div id="unity-logo-title-footer"></div>
         <div id="unity-fullscreen-button"></div>
         <div id="unity-build-title">AI_Odyssey_Frontend</div>
@@ -87,26 +88,98 @@
       // JS_FileSystem_Sync() behavior, but in future Unity version, this will be
       // expected to change.
 
-      if (/iPhone|iPad|iPod|Android/i.test(navigator.userAgent)) {
-        // Mobile device style: fill the whole browser client area with the game canvas:
-
-        var meta = document.createElement('meta');
-        meta.name = 'viewport';
-        meta.content = 'width=device-width, height=device-height, initial-scale=1.0, user-scalable=no, shrink-to-fit=yes';
-        document.getElementsByTagName('head')[0].appendChild(meta);
-        document.querySelector("#unity-container").className = "unity-mobile";
-        canvas.className = "unity-mobile";
-
-        // To lower canvas resolution on mobile devices to gain some
-        // performance, uncomment the following line:
-        // config.devicePixelRatio = 1;
-
-
-      } else {
-        // Desktop style: Render the game canvas in a window that can be maximized to fullscreen:
-        canvas.style.width = "1920px";
-        canvas.style.height = "1080px";
+      // 響應式設計函數
+      function adjustCanvasSize() {
+        const container = document.querySelector("#unity-container");
+        const canvas = document.querySelector("#unity-canvas");
+        const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+        
+        if (isMobile) {
+          // 行動裝置：填滿整個螢幕
+          container.className = "unity-mobile";
+          canvas.className = "unity-mobile";
+        } else {
+          // 桌面裝置：置中顯示，響應式調整
+          container.className = "unity-desktop";
+          canvas.className = "";
+          
+          const windowWidth = window.innerWidth;
+          const windowHeight = window.innerHeight;
+          const gameAspectRatio = 1920 / 1080;
+          const windowAspectRatio = windowWidth / windowHeight;
+          
+          let canvasWidth, canvasHeight;
+          
+          if (windowAspectRatio > gameAspectRatio) {
+            // 視窗較寬，以高度為基準
+            canvasHeight = Math.min(windowHeight * 0.8, 1080);
+            canvasWidth = canvasHeight * gameAspectRatio;
+          } else {
+            // 視窗較高，以寬度為基準
+            canvasWidth = Math.min(windowWidth * 0.8, 1920);
+            canvasHeight = canvasWidth / gameAspectRatio;
+          }
+          
+          // 確保canvas置中
+          canvas.style.width = canvasWidth + "px";
+          canvas.style.height = canvasHeight + "px";
+          canvas.style.margin = "0 auto";
+          canvas.style.display = "block";
+        }
       }
+      
+      // 初始調整
+      adjustCanvasSize();
+      
+      // 監聽視窗大小變化
+      window.addEventListener('resize', adjustCanvasSize);
+
+      // 底部工具列切換功能
+      function toggleFooter() {
+        const footer = document.querySelector("#unity-footer");
+        if (footer.style.display === "none") {
+          footer.style.display = "flex";
+        } else {
+          footer.style.display = "none";
+        }
+      }
+
+      // 點擊遊戲畫面時隱藏底部工具列
+      function hideFooterOnGameClick() {
+        const canvas = document.querySelector("#unity-canvas");
+        const footer = document.querySelector("#unity-footer");
+        
+        canvas.addEventListener('click', function() {
+          footer.style.display = "none";
+        });
+      }
+
+      // 鍵盤快捷鍵重新顯示底部工具列
+      function showFooterOnKeyPress() {
+        document.addEventListener('keydown', function(event) {
+          // 按 F1 或 Tab 鍵重新顯示底部工具列
+          if (event.key === 'F1' || event.key === 'Escape') {
+            event.preventDefault();
+            const footer = document.querySelector("#unity-footer");
+            footer.style.display = "flex";
+          }
+        });
+      }
+
+      // 雙擊遊戲畫面重新顯示底部工具列
+      function showFooterOnDoubleClick() {
+        const canvas = document.querySelector("#unity-canvas");
+        const footer = document.querySelector("#unity-footer");
+        
+        canvas.addEventListener('dblclick', function() {
+          footer.style.display = "flex";
+        });
+      }
+
+      // 初始化底部工具列功能
+      hideFooterOnGameClick();
+      showFooterOnKeyPress();
+      showFooterOnDoubleClick();
 
       document.querySelector("#unity-loading-bar").style.display = "block";
 
